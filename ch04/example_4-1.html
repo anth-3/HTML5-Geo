@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>A Simple Google Map</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
+    <meta charset="utf-8"/>
+    <style type="text/css">
+      html { height: 100% }
+      body { height: 100%; margin: 0; padding: 0 }
+      #map { height: 100% }
+    </style>
+    <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
+    <script type="text/javascript">
+      var map;
+
+      /* This is called once the page has loaded */
+      function InitMap() {
+        /* Set all of the options for the map */
+        var options = {
+          zoom: 4,
+          center: new google.maps.LatLng(38.6201, -90.2003),
+          mapTypeId: google.maps.MapTypeId.ROADMAP,
+          mapTypeControl: true,
+          mapTypeControlOptions: {
+            style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+            position: google.maps.ControlPosition.BOTTOM_CENTER
+          },
+          panControl: true,
+          panControlOptions: {
+            position: google.maps.ControlPosition.TOP_RIGHT
+          },
+          zoomControl: true,
+          zoomControlOptions: {
+            style: google.maps.ZoomControlStyle.LARGE,
+            position: google.maps.ControlPosition.LEFT_CENTER
+          },
+          scaleControl: true,
+          scaleControlOptions: {
+            position: google.maps.ControlPosition.BOTTOM_LEFT
+          },
+          streetViewControl: true,
+          streetViewControlOptions: {
+            position: google.maps.ControlPosition.LEFT_TOP
+          }
+        };
+
+        /* Create a new Map for the application */
+        map = new google.maps.Map(document.getElementById('map'), options);
+      }
+
+      /* A utility object for simple event handlilng */
+      var Utils = { };
+
+      Utils.addEvent = (function() {
+        return function addEvent(eventObj, event, eventHandler) {
+          if (eventObj.addEventListener) {
+            eventObj.addEventListener(event, eventHandler, false);
+          } else if (eventObj.attachEvent) {
+            event = 'on' + event;
+            eventObj.attachEvent(event, eventHandler);
+          } else {
+            eventObj['on' + event] = function() { eventHandler() };
+          }
+        };
+      }());
+
+      Utils.removeEvent = (function() {
+        return function removeEvent(event) {
+          if (event.preventDefault) {
+            event.preventDefault();
+            event.stopProgagation();
+          } else {
+            event.returnValue = false;
+            event.cancelBubble = true;
+          }
+        };
+      }());
+
+      Utils.addEvent(window, 'load', InitMap);
+    </script>
+  </head>
+  <body>
+    <div id="map"></div>
+  </body>
+</html>
