@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>A First Geolocation Example</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
+    <meta charset="utf-8"/>
+    <script type="text/javascript">
+      var options = {
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 45000
+      };
+
+      if (window.navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(successCallback, errorCallback, options);
+      } else {
+        alert('Your browser does not natively support geolocation.');
+      }
+
+      function successCallback(position) {
+        var output = '';
+
+        output += "Your position has been located.\n\n";
+        output += 'Latitude: ' + position.coords.latitude + "°\n";
+        output += 'Longitude: ' + position.coords.longitude + "°\n";
+        output += 'Accuracy: ' + position.coords.accuracy + " meters\n";
+        if (position.coords.altitude)
+          output += 'Altitude: ' + position.coords.altitude + " meters\n";
+        if (position.coords.altitudeAccuracy)
+          output += 'Altitude Accuracy: ' + position.coords.altitudeAccuracy + " meters\n";
+        if (position.coords.heading)
+          output += 'Heading: ' + position.coords.Heading + "°\n";
+        if (position.coords.speed)
+          output += 'Speed: ' + position.coords.Speed + " m/s\n";
+        output += 'Time of Position: ' + position.timestamp;
+
+        alert(output);
+      }
+
+      function errorCallback(error) {
+        // There was a problem getting the location
+      }
+    </script>
+  </head>
+  <body>
+    <div>A First Geolocation Example</div>
+  </body>
+</html>
