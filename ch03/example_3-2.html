@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Converting from decimal degrees to DMS and back</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no"/>
+    <meta charset="utf-8"/>
+    <script type="text/javascript">
+      function dd2dms(degree, lat_long) {
+        this.deg = Math.abs(parseInt(degree));
+        this.min = (Math.abs(degree) - this.deg) * 60;
+        this.sec = this.min;
+        this.min = Math.abs(parseInt(this.min));
+        this.sec = Math.round((this.sec - this.min) * 60 * 1000000) / 1000000;
+        this.sign = (degree < 0) ? -1 : 1;
+        this.dir = (lat_long == 'lat') ? ((this.sign > 0) ? 'N' : 'S') : ((this.sign > 0) ? 'E' : 'W');
+        this.toString = function(dir) {
+          if (isNaN(dir))
+            return (this.deg * this.sign) + "\u00b0 " + this.min + "' " + this.sec + '" ';
+          else
+            return this.deg + "\u00b0 " + this.min + "' " + this.sec + '" ' + this.dir;
+        };
+      }
+
+      function dms2dd(deg, min, sec, dir) {
+        if (dir) {
+          this.sign = (dir.toLowerCase() == 'w' || dir.toLowerCase() == 's') ? -1 : 1;
+          this.dir = (dir.toLowerCase() == 'w' || dir.toLowerCase() == 's' || dir.toLowerCase() == 'n' || dir.toLowerCase() == 'e') ? dir.toUpperCase() : '';
+        } else {
+          this.sign = (deg < 0) ? -1 : 1;
+          this.dir = '';
+        }
+        this.dec = Math.round((Math.abs(deg) + ((min * 60) + sec) / 3600) * 1000000) / 1000000;
+        this.toString = function(dir) {
+          if (isNaN(dir) || this.dir == '')
+            return (this.dec * this.sign) + "\u00b0";
+          else
+            return this.dec + "\u00b0" + ' ' + this.dir;
+        }  
+      }
+
+      alert(new dd2dms(40.567534, 'long').toString(1));
+      alert(new dms2dd(40, 34, 3.12243344, 'E').toString(1));
+    </script>
+  </head>
+  <body>
+    <div>Convertors</div>
+  </body>
+</html>
