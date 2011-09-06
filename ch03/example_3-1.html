@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ï»¿<!DOCTYPE html>
+=======
+<!DOCTYPE html>
+>>>>>>> dbc766080bfb17540e162a78ca29c910d18aba55
 <html lang="en">
   <head>
     <title>A First Geolocation Example</title>
@@ -21,15 +25,24 @@
         var output = '';
 
         output += "Your position has been located.\n\n";
+<<<<<<< HEAD
         output += 'Latitude: ' + position.coords.latitude + "Â°\n";
         output += 'Longitude: ' + position.coords.longitude + "Â°\n";
+=======
+        output += 'Latitude: ' + position.coords.latitude + "°\n";
+        output += 'Longitude: ' + position.coords.longitude + "°\n";
+>>>>>>> dbc766080bfb17540e162a78ca29c910d18aba55
         output += 'Accuracy: ' + position.coords.accuracy + " meters\n";
         if (position.coords.altitude)
           output += 'Altitude: ' + position.coords.altitude + " meters\n";
         if (position.coords.altitudeAccuracy)
           output += 'Altitude Accuracy: ' + position.coords.altitudeAccuracy + " meters\n";
         if (position.coords.heading)
+<<<<<<< HEAD
           output += 'Heading: ' + position.coords.Heading + "Â°\n";
+=======
+          output += 'Heading: ' + position.coords.Heading + "°\n";
+>>>>>>> dbc766080bfb17540e162a78ca29c910d18aba55
         if (position.coords.speed)
           output += 'Speed: ' + position.coords.Speed + " m/s\n";
         output += 'Time of Position: ' + position.timestamp;
