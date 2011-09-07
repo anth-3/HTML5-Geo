@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=7"/>
+    <meta http-equiv="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no"/>
+
+    <title>A Simple Esri ArcGIS Map</title>
+
+    <link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.2/js/dojo/dijit/themes/claro/claro.css"/>
+    <style type="text/css">
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+      }
+
+      #map {
+        height: 100%;
+        width: 100%;
+      }    
+    </style>
+
+    <script type="text/javascript">
+      var djConfig = { parseOnLoad: true };
+    </script>
+    <script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.2"></script>
+    <script type="text/javascript">
+      dojo.require('esri.map');
+
+      var map;
+      var initialExtent = {
+        xmin: -119.3324,
+        ymin: 26.3156,
+        xmax: -72.3568,
+        ymax: 55.0558,
+        /* 
+         * Web Mercator (102113), or WGS 84 (4326) - these are the 
+         * only two that support continuous pan across the date line 
+         */  
+        spatialReference: { wkid: 4326 }
+      };
+      var startExtent;
+      var basemap;
+
+      function initApp() {
+        var startExtent = new esri.geometry.Extent(initialExtent);
+
+        map = new esri.Map('map', { 
+          extent: startExtent, 
+          wrapAround180: true
+        });
+
+        basemap = new esri.layers.ArcGISTiledMapServiceLayer('http://server.arcgisonline.com/ArcGIS/rest/services/ESRI_StreetMap_World_2D/MapServer');
+        map.addLayer(basemap);
+      }
+
+      dojo.addOnLoad(initApp);
+    </script>
+  </head>
+  <body class="claro">
+    <div id="map"></div>
+  </body>
+</html>
