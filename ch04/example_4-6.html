@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=7"/>
+    <meta http-equiv="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no"/>
+
+    <title>Adding Geolocation for Other Browsers to an Esri Map</title>
+
+    <link rel="stylesheet" href="http://serverapi.arcgisonline.com/jsapi/arcgis/2.2/js/dojo/dijit/themes/claro/claro.css"/>
+    <style type="text/css">
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        width: 100%;
+      }
+
+      #map {
+        height: 100%;
+        width: 100%;
+      }    
+    </style>
+
+    <script type="text/javascript">
+      var djConfig = { parseOnLoad: true };
+    </script>
+    <script type="text/javascript" src="http://serverapi.arcgisonline.com/jsapi/arcgis/?v=2.2"></script>
+    <script type="text/javascript" src="lib/gears_init.js"></script>
+    <script type="text/javascript" src="lib/geo.js"></script>
+    <script type="text/javascript">
+      dojo.require('esri.map');
+
+      var map;
+      var initialExtent = {
+          xmin: -119.3324,
+          ymin: 26.3156,
+          xmax: -72.3568,
+          ymax: 55.0558,
+          /* 
+           * Web Mercator (102113), or WGS 84 (4326) - these are the 
+           * only two that support continuous pan across the date line 
+           */  
+          spatialReference: { wkid: 4326 }
+      };
+      var startExtent;
+      var basemap;
+      var browserSupport = false;
+
+      function initApp() {
+        var startExtent = new esri.geometry.Extent(initialExtent);
+
+        map = new esri.Map('map', { 
+            extent: startExtent, 
+            wrapAround180: true
+          });
+
+        basemap = new esri.layers.ArcGISTiledMapServiceLayer('http://server.arcgisonline.com/ArcGIS/rest/services/ESRI_StreetMap_World_2D/MapServer');
+        map.addLayer(basemap);
+
+        /* Add Geolocation */
+        dojo.connect(map, 'onLoad', function() { 
+          getLocation();
+        });
+      }
+
+      /* 
+       * The browser will now use whatever geolocation API is available to
+       * it; hopefully it will be the W3C Geolocation object that is used to 
+       * get the current location. If there is no geolocation support at all,
+       * then report the problem. 
+       */
+      function getLocation() {
+        /* Check if the browser supports any geolocation API */
+        if (geo_position_js.init()) {
+          browserSupport = true;
+          geo_position_js.getCurrentPosition(plotLocation, reportProblem);
+        } else
+          reportProblem();
+      }
+
+
+      /* Plot the location on the map and zoom to it */
+      function plotLocation(position) {
+        attempts = 0;
+
+        var pointsLayer = new esri.layers.GraphicsLayer();
+
+        map.addLayer(pointsLayer);
+
+        var point = new esri.geometry.Point(position.coords.longitude, position.coords.latitude, new esri.SpatialReference({ wkid: 4326 }));
+ 
+        pointsLayer.add(new esri.Graphic(point, new esri.symbol.SimpleMarkerSymbol().setColor(new dojo.Color([255, 0, 0, 0.5]))));
+        map.centerAndZoom(point, 13);
+      }
+
+      /* Report any errors using this function */
+      function reportProblem() {
+        /* Is this a support issue or an API issue? */
+        if (browserSupport)
+          alert('Could not locate your device.');
+        else
+          alert('Geolocation is not supported by your browser.');
+      }
+
+      dojo.addOnLoad(initApp);
+    </script>
+  </head>
+  <body class="claro">
+    <div id="map"></div>
+  </body>
+</html>
