@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=7"/>
+    <meta http-equiv="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no"/>
+
+    <title>Tweets Near Me</title>
+
+    <style type="text/css">
+      html { height: 100% }
+      body { height: 100%; margin: 0; padding: 0 }
+      #map { height: 100% }
+      .tweet_info { border: 1px solid #000; padding: 15px; width: 300px }
+      .tweet_info img { float: right; height: 48px; margin: 0 0 10px 10px; width: 48px }
+      .tweet_info h3 { margin-bottom: 10px }
+    </style>
+
+    <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=true"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js"></script>
+    <script type="text/javascript" src="lib/jquery.timer.js"></script>
+    <script type="text/javascript">
+      var map = null;
+      var browserSupport = false;
+      var attempts = 0;
+      var tweets = [];
+      var tweetsQ = [];
+      var refreshQuery = '?q=';
+      var infoWindow = new google.maps.InfoWindow();
+
+      /* This is called once the page has loaded */
+      function initMap() {
+        /* Set all of the options for the map */
+        var options = {
+          zoom: 4,
+          center: new google.maps.LatLng(38.6201, -90.2003),
+          mapTypeId: google.maps.MapTypeId.ROADMAP
+        };
+
+        /* Create a new Map for the application */
+        map = new google.maps.Map(document.getElementById('map'), options);
+
+        /* Set up timers to collect tweets */
+        $(document).everyTime('30s', acquireTweets);
+        $(document).everyTime('100ms', parseTweetsQ);
+
+        /* Add Geolocation */
+        getLocation();
+      }
+
+      /* 
+       * If the W3C Geolocation object is available then get the current 
+       * location, otherwise report the problem 
+       */
+      function getLocation() {
+        /* Check if the browser supports the W3C Geolocation API */
+        if (navigator.geolocation) {
+          browserSupport = true;
+          navigator.geolocation.getCurrentPosition(function(position) {
+              plotLocation(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
+          }, reportProblem, { timeout: 45000 });
+        } else
+          reportProblem();
+      }
+
+      /* Create the URL that will call the Search API REST end point */
+      function createTweetSearchURL() {
+        var temp = map.getCenter();
+
+        return 'http://search.twitter.com/search.json' + refreshQuery + '&geocode=' + temp.lat() + '%2C' + temp.lng() + '%2C50km&rpp=100&callback=?';
+      }
+
+      /* Plot the location on the map and zoom to it, then get tweets */
+      function plotLocation(latLng) {
+        attempts = 0;
+
+        map.setCenter(latLng);
+        map.setZoom(11);
+
+        var marker = new google.maps.Marker({
+          position: latLng,
+          icon: 'img/myloc.png',
+          animation: google.maps.Animation.DROP
+        });
+        marker.setMap(map);
+
+        acquireTweets();
+      }
+
+      /* 
+       * Call the Twitter Search API and cycle through results, pushing tweets
+       * into the tweets queue
+       */
+      function acquireTweets() {
+        $.getJSON(createTweetSearchURL(), function(data) {
+          if (data.results)
+            $.each(data.results, function(i, tweet) {
+              if (tweet.geo || tweet.location)
+                tweetsQ.push(tweet);
+            });
+          refreshQuery = data.refresh_url;
+        });
+      }
+
+      /* Parse through the queue and plot any tweets that have coordinates */
+      function parseTweetsQ() {
+        if (tweetsQ.length > 0) {
+          var tweet = tweetsQ.pop();
+
+          /* Check to see if there are coordinates */
+          if (tweet.geo) {
+            tweet.latlng = new google.maps.LatLng(tweet.geo.coordinates[0], tweet.geo.coordinates[1]);
+            plotTweet(tweet);
+          }
+        }
+      }
+
+      /* Create the content for the information pop up window */
+      function createInfoContent(tweet) {
+        var retval = '';
+
+        retval += '<div class="tweet_info">';
+        retval += '<img alt="' + tweet.from_user_id + '" src="' + tweet.profile_image_url + '" class="tweet_profile"/>';
+        retval += '<h3>' + tweet.from_user + '</h3>';
+        retval += '<p>' + tweet.text + '</p>';
+        retval += '<p>Source: <a href="' + tweet.source + '"/>' + tweet.source + '</a></p>';
+        retval += '</div>';
+        return retval;
+      }
+
+      /* 
+       * Plot the tweet on the map, and add the /click/ event to show 
+       * the /infoWindow/
+       */
+      function plotTweet(tweet) {
+        tweet.marker = new google.maps.Marker({
+          position: tweet.latlng,
+          icon: 'img/tweet.png',
+          animation: google.maps.Animation.DROP,
+          title: tweet.from_user,
+          html: createInfoContent(tweet)
+        });
+        google.maps.event.addListener(tweet.marker, 'click', function() {
+          infoWindow.setContent(this.html);
+          infoWindow.open(map, this);
+        });
+        tweet.marker.setMap(map);
+        /* 
+         * If there are more than 100 tweets on the map, remove the oldest 
+         * one from the map
+         */
+        if (tweets.length > 100) {
+          var tweet = tweets.shift();
+
+          tweet.marker.setMap(null);
+        }
+      }
+
+      /* Report any errors using this function */
+      function reportProblem(e) {
+        /* Is this a support issue or an API issue? */
+        if (browserSupport) {
+          switch (e.code) {
+            case e.PERMISSION_DENIED:
+              alert('You have denied access to your position. You will not get the most out of the application now.');
+              break;
+            case e.POSITION_UNAVAILABLE:
+              alert('There was a problem getting your position.');
+              break;
+            case e.TIMEOUT:
+              /* Three changes to get the location before a true timeout */
+              if (++attempts < 3) {
+                navigator.geolocation.getCurrentPosition(plotLocation, reportProblem);
+              } else
+                alert('The application has timed out attempting to get your location.');
+              break;
+            default:
+              alert('There was a horrible Geolocation error that has not been defined.');
+          }
+        } else
+          alert('Geolocation is not supported by your browser.');
+      }
+
+      $(document).ready(initMap);
+    </script>
+  </head>
+  <body>
+    <div id="map"></div>
+  </body>
+</html>
